@@ -144,6 +144,7 @@ footer .fl{font-weight:700;color:var(--ink);margin-bottom:4px;font-size:14px}
       <span class="tag">实车实拍</span>
     </div>
     <div class="sub">一车一况 · 当前在售 <b id="count">0</b> 台 · 价格以实车洽谈为准</div>
+    <div class="seller" id="sellerLine" style="display:none;margin-top:6px;font-size:14px;color:#ffd76a;">您的专属顾问：<b id="sellerName"></b></div>
   </div>
   <div class="filters" id="filters"></div>
 </header>
@@ -179,10 +180,20 @@ footer .fl{font-weight:700;color:var(--ink);margin-bottom:4px;font-size:14px}
 <div class="toast" id="toast"></div>
 
 <script>
-const SHOP = {
-  phone: "15991243999",
-  wechat: "C15991243999"
+const SELLERS = {
+  default:   { name: "老板",   phone: "15991243999", wechat: "C15991243999" },
+  wuxuan:    { name: "武轩",   phone: "18700934812", wechat: "W756931470"   },
+  yijie:     { name: "毅杰",   phone: "13109616950", wechat: "cyj09090900"  },
+  chengjuan: { name: "程娟",   phone: "18191136059", wechat: "cj1985113"    }
 };
+const _sParam = new URLSearchParams(location.search).get("s");
+const _matched = _sParam && Object.prototype.hasOwnProperty.call(SELLERS, _sParam) && _sParam !== "default";
+const SHOP = _matched ? SELLERS[_sParam] : SELLERS.default;
+if (_matched) {
+  const line = document.getElementById("sellerLine");
+  document.getElementById("sellerName").textContent = SHOP.name;
+  line.style.display = "block";
+}
 
 const CARS = [
   {
