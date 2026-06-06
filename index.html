@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>在售车源</title>
+<style>
+/* ====== 主题颜色，想换风格改这里 ====== */
+:root{
+  --bg:#f4f1ea;
+  --paper:#fffdf8;
+  --ink:#1a1815;
+  --muted:#7b756a;
+  --line:#e6e0d4;
+  --accent:#bf4327;
+  --accent-dark:#9c3318;
+  --green:#3f7d4f;
+  --amber:#b8862b;
+  --gray:#9a958c;
+  --num:ui-sans-serif,system-ui,-apple-system,"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;
+  --cn:"PingFang SC","Microsoft YaHei","Noto Sans SC",system-ui,sans-serif;
+  --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,"DejaVu Sans Mono",monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  font-family:var(--cn);
+  background:var(--bg);
+  color:var(--ink);
+  line-height:1.5;
+  background-image:radial-gradient(var(--line) 0.5px,transparent 0.5px);
+  background-size:22px 22px;
+  -webkit-font-smoothing:antialiased;
+}
+header{
+  position:sticky;top:0;z-index:30;
+  background:rgba(244,241,234,0.92);
+  backdrop-filter:saturate(180%) blur(12px);
+  -webkit-backdrop-filter:saturate(180%) blur(12px);
+  border-bottom:1px solid var(--line);
+}
+.head-inner{max-width:1100px;margin:0 auto;padding:16px 18px 12px}
+.brand{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.brand h1{font-size:23px;letter-spacing:-.5px;font-weight:800}
+.brand .tag{font-family:var(--mono);font-size:11px;letter-spacing:.5px;color:var(--accent);
+  border:1px solid var(--accent);padding:2px 7px;border-radius:20px}
+.sub{margin-top:4px;font-size:13px;color:var(--muted)}
+.sub b{color:var(--ink);font-family:var(--num);font-weight:700}
+.filters{display:flex;gap:8px;overflow-x:auto;padding:12px 18px 14px;max-width:1100px;margin:0 auto;
+  -ms-overflow-style:none;scrollbar-width:none}
+.filters::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;border:1px solid var(--line);background:var(--paper);color:var(--muted);
+  padding:7px 16px;border-radius:30px;font-size:14px;cursor:pointer;transition:.18s;white-space:nowrap}
+.chip:hover{border-color:var(--ink);color:var(--ink)}
+.chip.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.grid{max-width:1100px;margin:0 auto;padding:4px 14px 90px;
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:16px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:16px;overflow:hidden;
+  cursor:pointer;transition:.22s ease;opacity:0;transform:translateY(14px);
+  animation:rise .5s ease forwards}
+@keyframes rise{to{opacity:1;transform:none}}
+.card:hover{transform:translateY(-4px);box-shadow:0 14px 34px -16px rgba(40,30,20,.35);border-color:#d8d0c0}
+.card.sold{opacity:.62}
+.card.sold:hover{transform:none;box-shadow:none}
+.ph{position:relative;aspect-ratio:16/10;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.ph img{width:100%;height:100%;object-fit:cover;display:block}
+.ph .name-on{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:14px;color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.3)}
+.ph .name-on .carico{width:54px;height:54px;opacity:.85;margin-bottom:6px}
+.ph .name-on span{font-size:15px;font-weight:600;letter-spacing:.5px}
+.ph .demo{position:absolute;left:10px;bottom:10px;font-family:var(--mono);font-size:10px;
+  background:rgba(0,0,0,.45);color:#fff;padding:3px 7px;border-radius:5px;letter-spacing:.3px}
+.vbadge{position:absolute;right:10px;bottom:10px;font-size:11px;font-weight:600;color:#fff;
+  background:rgba(0,0,0,.6);padding:4px 9px;border-radius:20px;display:flex;align-items:center;gap:4px}
+.badge{position:absolute;top:10px;left:10px;font-size:12px;font-weight:600;color:#fff;
+  padding:4px 10px;border-radius:20px}
+.b-sale{background:var(--green)} .b-hold{background:var(--amber)} .b-sold{background:var(--gray)}
+.info{padding:13px 14px 15px}
+.info .title{font-size:16px;font-weight:700;letter-spacing:-.2px;line-height:1.35}
+.specs{display:flex;flex-wrap:wrap;gap:6px;margin:9px 0 11px}
+.specs span{font-family:var(--num);font-size:12.5px;color:var(--muted);background:#f1ece1;
+  padding:3px 9px;border-radius:6px;font-weight:500}
+.bottom{display:flex;align-items:flex-end;justify-content:space-between;gap:8px}
+.price{font-family:var(--num);font-weight:800;color:var(--accent);font-size:24px;letter-spacing:-.5px}
+.price small{font-size:13px;font-weight:600;margin-left:1px}
+.hl{font-size:12.5px;color:var(--muted);text-align:right;max-width:55%}
+.modal{position:fixed;inset:0;z-index:50;display:none}
+.modal.open{display:block}
+.mask{position:absolute;inset:0;background:rgba(26,24,21,.55);backdrop-filter:blur(3px)}
+.sheet{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(560px,94vw);
+  max-height:92vh;background:var(--paper);border-radius:20px;overflow:hidden;display:flex;flex-direction:column;
+  box-shadow:0 30px 80px -30px rgba(0,0,0,.6);animation:pop .26s cubic-bezier(.2,.9,.3,1)}
+@keyframes pop{from{opacity:0;transform:translate(-50%,-46%) scale(.97)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+.close{position:absolute;top:12px;right:12px;z-index:5;width:34px;height:34px;border-radius:50%;
+  border:none;background:rgba(255,255,255,.85);font-size:20px;cursor:pointer;line-height:1}
+.gallery{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;background:#222}
+.gallery::-webkit-scrollbar{display:none}
+.gallery .g{flex:0 0 100%;aspect-ratio:16/10;scroll-snap-align:start;position:relative}
+.gallery .g img{width:100%;height:100%;object-fit:cover}
+.gallery .g video{width:100%;height:100%;object-fit:cover;background:#000}
+.vdemo{background:linear-gradient(135deg,#2b2b30,#171719);display:flex;align-items:center;justify-content:center}
+.vdemo-in{text-align:center;color:#fff}
+.playc{width:60px;height:60px;border-radius:50%;border:2px solid rgba(255,255,255,.85);
+  display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 12px;padding-left:4px}
+.vdemo-in b{display:block;font-size:14px;font-weight:600}
+.vdemo-in small{display:block;font-size:11px;color:rgba(255,255,255,.6);margin-top:5px;font-family:var(--mono)}
+.gbody{padding:20px 22px 16px;overflow-y:auto}
+.gbody .t{font-size:21px;font-weight:800;letter-spacing:-.3px}
+.gbody .p{font-family:var(--num);font-weight:800;color:var(--accent);font-size:30px;margin:6px 0 4px}
+.gbody .p small{font-size:15px}
+.sheet .st{display:inline-block;font-size:12px;color:#fff;padding:3px 10px;border-radius:18px;margin-bottom:14px}
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px 18px;padding:14px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.sgrid .row{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.sgrid .k{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.3px}
+.sgrid .v{font-family:var(--num);font-size:15px;font-weight:600;text-align:right}
+.cond{padding:14px 0 4px}
+.cond h4{font-size:13px;color:var(--muted);font-weight:600;margin-bottom:6px}
+.cond p{font-size:14.5px;line-height:1.7;color:#34302a;white-space:pre-line}
+.contact-bar{display:flex;gap:10px;padding:14px 22px;border-top:1px solid var(--line);background:var(--paper)}
+.btn{flex:1;text-align:center;padding:13px;border-radius:12px;font-size:15px;font-weight:700;
+  cursor:pointer;border:none;text-decoration:none;transition:.18s}
+.btn-call{background:var(--accent);color:#fff}
+.btn-call:active{background:var(--accent-dark)}
+.btn-wx{background:#f1ece1;color:var(--ink)}
+.btn-wx:active{background:#e6dfd1}
+footer{max-width:1100px;margin:0 auto;padding:24px 20px 40px;color:var(--muted);font-size:13px;line-height:1.9}
+footer .fl{font-weight:700;color:var(--ink);margin-bottom:4px;font-size:14px}
+.toast{position:fixed;left:50%;bottom:40px;transform:translateX(-50%) translateY(20px);
+  background:var(--ink);color:#fff;padding:11px 20px;border-radius:30px;font-size:14px;opacity:0;
+  transition:.25s;pointer-events:none;z-index:99}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media(max-width:430px){
+  .grid{grid-template-columns:1fr;gap:14px}
+  .brand h1{font-size:21px}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="head-inner">
+    <div class="brand">
+      <h1 id="shopName">XX名车 · 二手车</h1>
+      <span class="tag">实车实拍</span>
+    </div>
+    <div class="sub">一车一况 · 当前在售 <b id="count">0</b> 台 · 价格以实车洽谈为准</div>
+  </div>
+  <div class="filters" id="filters"></div>
+</header>
+
+<main class="grid" id="grid"></main>
+
+<footer>
+  <div class="fl">XX名车（示例，替换成你家车行名）</div>
+  地址：XX市XX区XX路XX号（车行地址）<br>
+  营业时间：09:00 - 19:00 · 看车前可先电话确认在不在<br>
+  电话 / 微信：见每台车详情里的联系按钮
+</footer>
+
+<div class="modal" id="modal">
+  <div class="mask" onclick="closeModal()"></div>
+  <div class="sheet">
+    <button class="close" onclick="closeModal()">×</button>
+    <div class="gallery" id="mGallery"></div>
+    <div class="gbody">
+      <div class="t" id="mTitle"></div>
+      <div class="p" id="mPrice"></div>
+      <span class="st" id="mStatus"></span>
+      <div class="sgrid" id="mSpecs"></div>
+      <div class="cond"><h4>车况说明</h4><p id="mCond"></p></div>
+    </div>
+    <div class="contact-bar">
+      <a class="btn btn-call" id="mCall" href="tel:13800000000">拨打电话</a>
+      <button class="btn btn-wx" onclick="copyWx()">加微信</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SHOP = {
+  phone: "13800000000",
+  wechat: "your_wechat_id"
+};
+
+const CARS = [
+  {
+    id:"A01", name:"丰田 汉兰达 2020款 2.0T 四驱豪华版", type:"SUV",
+    year:2020, mileage:5.5, price:23.8, gearbox:"6AT", displacement:"2.0T",
+    emission:"国六", transfers:1, color:"珍珠白", status:"在售",
+    highlight:"一手家用 · 大七座",
+    cond:"个人一手家用车，无重大事故、无水泡、无火烧。\n表显5.5万公里真实，全程4S保养记录可查，原版原漆。\n四驱七座空间大，新换四条轮胎。支持上线检测、第三方查验，欢迎到店看车试驾。",
+    images:[], video:"demo"
+  },
+  {
+    id:"A02", name:"日产 轩逸 2021款 1.6L CVT 舒适版", type:"轿车",
+    year:2021, mileage:3.1, price:8.9, gearbox:"CVT", displacement:"1.6L",
+    emission:"国六", transfers:0, color:"象牙白", status:"在售",
+    highlight:"准新车 · 0过户",
+    cond:"21年准新车，个人一手未过户，无事故无水泡。\n表显3万出头，省油耐用，适合家用代步上下班，车况精品。",
+    images:[], video:""
+  },
+  {
+    id:"A03", name:"大众 帕萨特 2019款 280TSI 商务版", type:"轿车",
+    year:2019, mileage:6.8, price:9.8, gearbox:"双离合", displacement:"1.4T",
+    emission:"国六", transfers:1, color:"曜石黑", status:"在售",
+    highlight:"商务居家两用",
+    cond:"19款帕萨特，空间大配置足，一次过户。\n无事故无水泡，外观内饰干净，发动机变速箱无异响，性价比高。",
+    images:[], video:""
+  },
+  {
+    id:"A04", name:"本田 CR-V 2018款 240TURBO 两驱舒适", type:"SUV",
+    year:2018, mileage:8.5, price:11.5, gearbox:"CVT", displacement:"1.5T",
+    emission:"国五", transfers:1, color:"星空银", status:"在售",
+    highlight:"保值耐开 · 省心",
+    cond:"本田CR-V，省心保值的家用SUV，一次过户。\n底盘紧致无渗漏，四条轮胎花纹尚可，全国可迁。",
+    images:[], video:""
+  },
+  {
+    id:"A05", name:"宝马 3系 2018款 320Li 时尚型", type:"轿车",
+    year:2018, mileage:9.8, price:15.5, gearbox:"8AT", displacement:"2.0T",
+    emission:"国五", transfers:2, color:"矿石蓝", status:"在售",
+    highlight:"操控好 · 落地价低",
+    cond:"长轴距320Li，开起来有面子也好开，两次过户。\n车况扎实无大事故，售价比同年份低，预算有限想买豪华品牌的可重点看。",
+    images:[], video:""
+  },
+  {
+    id:"A06", name:"丰田 卡罗拉 2020款 1.2T 精英版", type:"轿车",
+    year:2020, mileage:4.2, price:8.6, gearbox:"CVT", displacement:"1.2T",
+    emission:"国六", transfers:0, color:"铂金白", status:"在售",
+    highlight:"一手 · 超省油",
+    cond:"个人一手卡罗拉，公里数低，无事故无水泡。\n丰田品质开十年不大修，市区代步神器，油耗极低。",
+    images:[], video:""
+  },
+  {
+    id:"A07", name:"别克 GL8 2019款 ES 陆尊 28T", type:"商务",
+    year:2019, mileage:9.2, price:16.8, gearbox:"6AT", displacement:"2.0T",
+    emission:"国六", transfers:1, color:"曜石黑", status:"已预订",
+    highlight:"商务接送首选",
+    cond:"GL8陆尊，商务接送、全家出行都合适，二排独立座椅。\n已有客户预订，想要同款可来电问还有没有现车。",
+    images:[], video:""
+  },
+  {
+    id:"A08", name:"哈弗 H6 2019款 1.5T 自动豪华", type:"SUV",
+    year:2019, mileage:7.0, price:7.2, gearbox:"双离合", displacement:"1.5T",
+    emission:"国六", transfers:1, color:"魅力红", status:"已售",
+    highlight:"已售出",
+    cond:"国民神车哈弗H6，已售出。\n需要同价位国产SUV的可联系，店里随时有车进。",
+    images:[], video:""
+  }
+];
+
+const TYPES = ["全部","SUV","轿车","商务"];
+const STATUS_CLS = {"在售":"b-sale","已预订":"b-hold","已售":"b-sold"};
+let curFilter = "全部";
+
+const carSvg = `<svg class="carico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13l2-5a2 2 0 0 1 1.8-1.2h10.4A2 2 0 0 1 19 8l2 5"/><path d="M3 13h18v4a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1v-1H6v1a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><circle cx="7" cy="14.5" r="1"/><circle cx="17" cy="14.5" r="1"/></svg>`;
+
+function tint(i){ const h=[18,200,142,38,260,8,170,95]; const c=h[i%h.length];
+  return `linear-gradient(135deg,hsl(${c} 32% 42%),hsl(${c} 38% 28%))`; }
+
+function phHtml(car,i){
+  if(car.images && car.images.length){
+    return `<img src="${car.images[0]}" alt="${car.name}">`;
+  }
+  return `<div style="position:absolute;inset:0;background:${tint(i)}"></div>
+    <div class="name-on">${carSvg}<span>${car.name}</span></div>
+    <div class="demo">示例图 · 替换为实拍</div>`;
+}
+
+function renderFilters(){
+  document.getElementById("filters").innerHTML = TYPES.map(t=>
+    `<div class="chip ${t===curFilter?'on':''}" onclick="setFilter('${t}')">${t}</div>`).join("");
+}
+function setFilter(t){ curFilter=t; renderFilters(); renderGrid(); }
+
+function renderGrid(){
+  const list = CARS.filter(c=> curFilter==="全部" || c.type===curFilter);
+  document.getElementById("count").textContent = CARS.filter(c=>c.status==="在售").length;
+  document.getElementById("grid").innerHTML = list.map((c,idx)=>{
+    const gi = CARS.indexOf(c);
+    return `<div class="card ${c.status==='已售'?'sold':''}" style="animation-delay:${idx*55}ms" onclick="openModal('${c.id}')">
+      <div class="ph">
+        <span class="badge ${STATUS_CLS[c.status]}">${c.status}</span>
+        ${phHtml(c,gi)}
+        ${c.video ? '<span class="vbadge">▶ 视频</span>' : ''}
+      </div>
+      <div class="info">
+        <div class="title">${c.name}</div>
+        <div class="specs">
+          <span>${c.year}年</span><span>${c.mileage}万公里</span>
+          <span>${c.gearbox}</span><span>${c.emission}</span>
+        </div>
+        <div class="bottom">
+          <div class="price">${c.price}<small>万</small></div>
+          <div class="hl">${c.highlight}</div>
+        </div>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+function videoSlide(c){
+  if(c.video==="demo"){
+    return `<div class="g vdemo"><div class="vdemo-in"><div class="playc">▶</div><b>你拍的绕车讲解视频放这里</b><small>填入 video 路径后点击即播</small></div></div>`;
+  }
+  const poster=(c.images&&c.images[0])||"";
+  return `<div class="g"><video src="${c.video}" controls muted playsinline preload="none" poster="${poster}"></video></div>`;
+}
+
+function openModal(id){
+  const c = CARS.find(x=>x.id===id); if(!c) return;
+  const gi = CARS.indexOf(c);
+  const photoImgs = (c.images && c.images.length) ? c.images : [0,1,2];
+  const photoSlides = photoImgs.map((im,k)=>
+    `<div class="g">${(c.images&&c.images.length)
+      ? `<img src="${im}" alt="">`
+      : `<div style="position:absolute;inset:0;background:${tint(gi+k)}"></div>
+         <div class="name-on">${carSvg}<span>${c.name}</span></div>
+         <div class="demo">示例图 · 替换为实拍</div>`}</div>`).join("");
+  document.getElementById("mGallery").innerHTML = (c.video ? videoSlide(c) : "") + photoSlides;
+  document.getElementById("mTitle").textContent = c.name;
+  document.getElementById("mPrice").innerHTML = `${c.price}<small>万</small>`;
+  const st = document.getElementById("mStatus");
+  st.textContent = c.status;
+  st.style.background = `var(--${c.status==='在售'?'green':c.status==='已预订'?'amber':'gray'})`;
+  document.getElementById("mSpecs").innerHTML = [
+    ["上牌年份",c.year+" 年"],["表显里程",c.mileage+" 万公里"],
+    ["排量",c.displacement],["变速箱",c.gearbox],
+    ["排放标准",c.emission],["过户次数",c.transfers+" 次"],
+    ["车身颜色",c.color],["库存编号",c.id]
+  ].map(([k,v])=>`<div class="row"><span class="k">${k}</span><span class="v">${v}</span></div>`).join("");
+  document.getElementById("mCond").textContent = c.cond;
+  document.getElementById("mCall").href = "tel:"+SHOP.phone;
+  document.getElementById("modal").classList.add("open");
+  document.body.style.overflow="hidden";
+}
+function closeModal(){
+  document.getElementById("modal").classList.remove("open");
+  document.body.style.overflow="";
+  document.querySelectorAll("#mGallery video").forEach(v=>v.pause());
+}
+function copyWx(){
+  navigator.clipboard?.writeText(SHOP.wechat).then(()=>toast("微信号已复制："+SHOP.wechat),
+    ()=>toast("微信号："+SHOP.wechat));
+}
+let tt;
+function toast(msg){
+  const el=document.getElementById("toast"); el.textContent=msg; el.classList.add("show");
+  clearTimeout(tt); tt=setTimeout(()=>el.classList.remove("show"),2200);
+}
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal();});
+
+renderFilters();
+renderGrid();
+</script>
+</body>
+</html>
