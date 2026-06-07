@@ -195,17 +195,29 @@ if (_matched) {
   line.style.display = "block";
 }
 
-const CARS = [
-  {
-    id:"A01", name:"奔驰 2019款 GLC260L 4MATIC 动感型", type:"SUV",
-    year:2019, mileage:6.5, price:15.38, gearbox:"9挡手自一体", displacement:"2.0T",
-    emission:"国六", transfers:2, color:"黑色", status:"在售",
-    highlight:"4MATIC四驱·配置丰富",
-    cond:"2019年9月上牌，2.0T+9挡，四驱。无重大事故、无水泡、无火烧，表显6.5万公里真实，两次过户。配置亮点：自动泊车入位、三色车内氛围灯、电动后尾门。保养情况以实车为准。车况以实车为准，可上线检测。支持上线检测、第三方查验，国六全国可迁，欢迎到店看车试驾，价格可详谈。",
-    images:["./pics/glc-01.jpg","./pics/glc-02.jpg","./pics/glc-03.jpg","./pics/glc-04.jpg","./pics/glc-05.jpg","./pics/glc-06.jpg","./pics/glc-07.jpg","./pics/glc-08.jpg","./pics/glc-09.jpg"],
-    video:""
-  }
-];
+let CARS = [];
+
+const STATUS_MAP = { on:'在售', rsv:'已预订', sold:'已售' };
+function mapCar(c){
+  return {
+    id:          c.id,
+    name:        c.name,
+    type:        c.type || '',
+    year:        c.year,
+    mileage:     parseFloat(c.km) || 0,
+    price:       parseFloat(c.price) || 0,
+    gearbox:     c.gear || '',
+    displacement:c.disp || '',
+    emission:    c.emission || '',
+    transfers:   c.transfer ?? '',
+    color:       c.color || '',
+    status:      STATUS_MAP[c.status] || '在售',
+    highlight:   c.highlight || '',
+    cond:        c.note || '',
+    images:      (c.photos || []).map(p => p.startsWith('./') ? p : './'+p),
+    video:       c.video || ''
+  };
+}
 
 const TYPES = ["全部","SUV","轿车","商务"];
 const STATUS_CLS = {"在售":"b-sale","已预订":"b-hold","已售":"b-sold"};
@@ -245,7 +257,7 @@ function renderGrid(){
       <div class="info">
         <div class="title">${c.name}</div>
         <div class="specs">
-          <span>${c.year}年</span><span>${c.mileage}万公里</span>
+          <span>${c.year}</span><span>${c.mileage}万公里</span>
           <span>${c.gearbox}</span><span>${c.emission}</span>
         </div>
         <div class="bottom">
@@ -282,7 +294,7 @@ function openModal(id){
   st.textContent = c.status;
   st.style.background = `var(--${c.status==='在售'?'green':c.status==='已预订'?'amber':'gray'})`;
   document.getElementById("mSpecs").innerHTML = [
-    ["上牌年份",c.year+" 年"],["表显里程",c.mileage+" 万公里"],
+    ["上牌年份",c.year],["表显里程",c.mileage+" 万公里"],
     ["排量",c.displacement],["变速箱",c.gearbox],
     ["排放标准",c.emission],["过户次数",c.transfers+" 次"],
     ["车身颜色",c.color],["库存编号",c.id]
@@ -308,8 +320,16 @@ function toast(msg){
 }
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal();});
 
-renderFilters();
-renderGrid();
+fetch('./cars.json')
+  .then(r => r.json())
+  .then(data => { CARS = data.map(mapCar); renderFilters(); renderGrid(); })
+  .catch(() => {
+    renderFilters();
+    document.getElementById("grid").innerHTML =
+      `<div style="grid-column:1/-1;text-align:center;padding:60px 20px;font-size:16px;color:var(--muted);">
+        车源加载中，请稍后刷新或联系我们
+      </div>`;
+  });
 </script>
 </body>
 </html>
