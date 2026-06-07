@@ -160,7 +160,7 @@
     </div>
     <div class="row2">
       <div class="field"><label>排量</label><input id="fDisp" placeholder="2.0T"></div>
-      <div class="field"><label>变速箱</label><select id="fGear"><option>自动</option><option>手动</option><option>双离合</option><option>CVT</option></select></div>
+      <div class="field"><label>变速箱</label><input id="fGear" placeholder="9挡手自一体"></div>
     </div>
     <div class="row2">
       <div class="field"><label>排放标准</label><input id="fEmission" placeholder="国六"></div>
@@ -319,15 +319,15 @@
       const c=cars.find(x=>String(x.id)===String(id));
       $("#formTitle").textContent="编辑车辆";
       $("#fName").value=c.name||"";$("#fYear").value=c.year||"";$("#fKm").value=c.km||"";
-      $("#fDisp").value=c.disp||"";$("#fGear").value=c.gear||"自动";$("#fTransfer").value=c.transfer||"";
+      $("#fDisp").value=c.disp||"";$("#fGear").value=c.gear||"";$("#fTransfer").value=c.transfer||"";
       $("#fPrice").value=c.price||"";$("#fEmission").value=c.emission||"";$("#fColor").value=c.color||"";
       $("#fNote").value=c.note||"";
       formPhotos=(c.photos||[]).map(p=>({type:"existing",path:p,url:base+p}));
       setStatus(c.status||"on");
     }else{
       $("#formTitle").textContent="添加车辆";
-      ["fName","fYear","fKm","fDisp","fTransfer","fPrice","fEmission","fColor","fNote"].forEach(k=>$("#"+k).value="");
-      $("#fGear").value="自动"; setStatus("on");
+      ["fName","fYear","fKm","fDisp","fGear","fTransfer","fPrice","fEmission","fColor","fNote"].forEach(k=>$("#"+k).value="");
+      setStatus("on");
     }
     renderPhotos(); $("#overlay").classList.add("show");
   }
